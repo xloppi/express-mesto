@@ -1,5 +1,14 @@
-const asdf = {
-  _id: 12345,
-};
+const express = require('express');
+const mongoose = require('mongoose');
 
-const _id = 123456;
+const { PORT = 3000 } = process.env;
+
+const app = express();
+
+mongoose.connect('mongodb://localhost:27017/mydb', {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useFindAndModify: false,
+});
+
+app.listen(PORT);
