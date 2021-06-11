@@ -12,12 +12,13 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   owner: {
-    type: mongoose.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
   likes: [{
-    type: mongoose.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     default: [],
+    ref: 'user',
   }],
   createdAt: [{
     type: Date,
