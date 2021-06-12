@@ -8,10 +8,16 @@ const getUsers = (req, res) => {
 
 const getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.status(200).send(user))
+    .then((user) => {
+      if (user) {
+        res.status(200).send(user);
+      } else {
+        res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
+        return res.status(400).send({ message: 'ошибка валидации userId' });
       }
       return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
     });
@@ -36,13 +42,16 @@ const updateProfile = (req, res) => {
     { name: req.body.name, about: req.body.about },
     { new: true, runValidators: true },
   )
-    .then((user) => res.status(200).send({ data: user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+    .then((user) => {
+      if (user) {
+        res.status(200).send(user);
+      } else {
+        res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
       }
-      if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        return res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
       }
       return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
     });
