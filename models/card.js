@@ -19,10 +19,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     default: [],
   }],
-  createdAt: [{
+  createdAt: {
     type: Date,
-    default: Date.now,
-  }],
+    default: Date.now(),
+  },
 });
 
 module.exports = mongoose.model('card', userSchema);
