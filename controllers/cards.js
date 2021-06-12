@@ -7,7 +7,10 @@ const getCards = (req, res) => {
 };
 
 const createCard = (req, res) => {
-  Card.create({ ...req.body })
+  const { name, link } = req.body;
+  const owner = req.user._id;
+
+  Card.create({ name, link, owner })
     .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -19,10 +22,16 @@ const createCard = (req, res) => {
 
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.status(200).send(card))
+    .then((card) => {
+      if (card) {
+        res.status(200).send(card);
+      } else {
+        res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+        return res.status(400).send({ message: 'ошибка валидации cardID' });
       }
       return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
     });
@@ -34,9 +43,15 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.status(200).send(card))
+    .then((card) => {
+      if (card) {
+        res.status(200).send(card);
+      } else {
+        res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка' });
       }
       return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
@@ -49,9 +64,15 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.status(200).send(card))
+    .then((card) => {
+      if (card) {
+        res.status(200).send(card);
+      } else {
+        res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные для снятии лайка' });
       }
       return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
