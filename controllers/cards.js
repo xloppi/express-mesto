@@ -21,7 +21,30 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  const userId = req.user._id;
+
+  Card.findOne(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      }
+
+      if (!userId === card.owner) {
+        res.status(403).send({ message: 'Пользователь не является владельцем карточки' });
+      }
+
+      return Card.remove(req.params.cardId)
+        .then((deletedCard) => res.status(200).send(deletedCard));
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'ошибка валидации cardID' });
+      }
+      return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
+    });
+};
+
+/* Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (card) {
         res.status(200).send(card);
@@ -34,8 +57,7 @@ const deleteCard = (req, res) => {
         return res.status(400).send({ message: 'ошибка валидации cardID' });
       }
       return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
-    });
-};
+    }); */
 
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
