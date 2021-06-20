@@ -55,7 +55,12 @@ const createUser = (req, res, next) => {
         })
           .then((user) => res.status(200).send(user));
       })
-      .catch(next);
+      .catch((err) => {
+        if (err.name === 'ValidationError' || err.name === 'CastError') {
+          return next(new ValidationError('Переданы некорректные данные при создании пользователя'));
+        }
+        return next(err);
+      });
   });
 };
 

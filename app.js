@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors, celebrate, Joi } = require('celebrate');
+const { isURL } = require('validator');
 const bodyParser = require('body-parser');
 const routes = require('./routes/index');
 const {
@@ -22,12 +24,27 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 
 app.use(bodyParser.json());
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    password: Joi.string().required(),
+  }),
+}), login);
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().required().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
+    avatar: Joi.string().required(),
+    email: Joi.string().required(),
+    password: Joi.string().required(),
+  }),
+}), createUser);
 
 app.use(auth);
 
 app.use(routes);
+
+app.use(errors());
 
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
@@ -43,3 +60,10 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT);
+
+/* (value, helpers) => {
+      if (isURL(value)) {
+        return value;
+      }
+      return helpers.error('any.invalid');
+    } */
