@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
-// const TokenError = require('../errors/token-err');
+const AuthError = require('../errors/token-err');
 const ValidationError = require('../errors/validation-err');
 const ConflictingError = require('../errors/conflicting-request-err');
 
@@ -61,7 +61,7 @@ const createUser = (req, res, next) => {
 
 const updateProfile = (req, res, next) => {
   if (!req.body.name || !req.body.about) {
-    return next(new ValidationError('Поля "имя" и "о себе" не могут быть пустыми'));
+    return next(new ValidationError('Не заполненно поле имя или о себе'));
   }
   return User.findByIdAndUpdate(
     req.user._id,
@@ -84,7 +84,7 @@ const updateProfile = (req, res, next) => {
 
 const updateAvatar = (req, res, next) => {
   if (!req.body.avatar) {
-    return next(new ValidationError('Поля "имя" и "о себе" не могут быть пустыми'));
+    return next(new ValidationError('Не заполненно поле аватар'));
   }
 
   return User.findByIdAndUpdate(
@@ -95,26 +95,26 @@ const updateAvatar = (req, res, next) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return new ValidationError('Переданы некорректные данные при обновлении аватара');
+        return next(new ValidationError('Переданы некорректные данные при обновлении аватара'));
       }
       if (err.name === 'CastError') {
-        return new NotFoundError('Пользователь с указанным _id не найден');
+        return next(new NotFoundError('Пользователь с указанным _id не найден'));
       }
       return next(err);
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).send({ message: 'Не заполненно поле email или пароль' });
+    return next(new ValidationError('Не заполненно поле email или пароль'));
   }
 
   return User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return res.status(400).send({ message: 'Такого пользователя не существует' });
+        throw next(new ValidationError('Такого пользователя не существует'));
       }
 
       return bcrypt.compare(
@@ -122,7 +122,7 @@ const login = (req, res) => {
         user.password,
         (error, isValid) => {
           if (!isValid) {
-            return res.status(401).send({ message: 'Не правильная почта или  пароль' });
+            throw next(new AuthError('Не правильная почта или пароль'));
           }
 
           const token = jwt.sign({ _id: user._id }, JWT_KEY, { expiresIn: '7d' });
@@ -135,7 +135,7 @@ const login = (req, res) => {
         },
       );
     })
-    .catch(() => res.status(400).send({ message: 'ошибка' }));
+    .catch(next);
 };
 
 const getMe = (req, res, next) => {
@@ -144,14 +144,14 @@ const getMe = (req, res, next) => {
       if (user) {
         res.status(200).send(user);
       } else {
-        res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+        throw new NotFoundError('Пользователь с указанным _id не найден');
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         return next(new ValidationError('Переданы некорректные данные при обновлении профиля'));
       }
-      return res.status(500).send({ message: `Произошла ошибка: ${err.message}` });
+      return next(err);
     });
 };
 
