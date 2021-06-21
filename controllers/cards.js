@@ -25,17 +25,17 @@ const createCard = (req, res, next) => {
 const deleteCard = (req, res, next) => {
   const userId = req.user._id;
 
-  Card.findOne(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         throw new NotFoundError('Карточка с указанным _id не найдена');
       }
 
-      if (!userId === card.owner) {
+      if (userId !== card.owner) {
         throw new ForbiddenError('Пользователь не является владельцем карточки');
       }
 
-      return Card.remove(req.params.cardId)
+      return Card.remove({ _id: req.params.cardId })
         .then((deletedCard) => res.status(200).send(deletedCard));
     })
     .catch((err) => {
