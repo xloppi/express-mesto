@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
+const { isURL } = require('validator');
 
 const {
   getUsers,
@@ -14,7 +15,7 @@ router.get('/me', getMe);
 router.patch('/me', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
-    about: Joi.string(),
+    about: Joi.string().min(2).max(30),
   }),
 }), updateProfile);
 router.get('/:userId', celebrate({
@@ -24,7 +25,12 @@ router.get('/:userId', celebrate({
 }), getUser);
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    link: Joi.string().required(),
+    avatar: Joi.string().required().pattern(/https?/).custom((value, helpers) => {
+      if (isURL(value)) {
+        return value;
+      }
+      return helpers.error('any.invalid');
+    }),
   }),
 }), updateAvatar);
 

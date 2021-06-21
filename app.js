@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { errors, celebrate, Joi } = require('celebrate');
-const { isURL } = require('validator');
+const { isURL, isEmail } = require('validator');
 const bodyParser = require('body-parser');
 const routes = require('./routes/index');
 const {
@@ -26,15 +26,31 @@ app.use(bodyParser.json());
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
+    email: Joi
+      .string()
+      .min(2)
+      .max(30)
+      .required()
+      .custom((value, helpers) => {
+        if (isEmail(value)) {
+          return value;
+        }
+        return helpers.error('any.invalid');
+      }),
     password: Joi.string().required(),
   }),
 }), login);
 app.post('/signup', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    about: Joi.string().required().min(2).max(30),
-    avatar: Joi.string().required(),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    // я добавил pattern(/https?/) потому что иначе isURL пропускает без 'https' или 'http'
+    avatar: Joi.string().required().pattern(/https?/).custom((value, helpers) => {
+      if (isURL(value)) {
+        return value;
+      }
+      return helpers.error('any.invalid');
+    }),
     email: Joi.string().required(),
     password: Joi.string().required(),
   }),
