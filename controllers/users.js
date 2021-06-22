@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
-const AuthError = require('../errors/token-err');
+const AuthError = require('../errors/auth-err');
 const ValidationError = require('../errors/validation-err');
 const ConflictingError = require('../errors/conflicting-request-err');
 
@@ -128,7 +128,7 @@ const login = (req, res, next) => {
   return User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw next(new ValidationError('Такого пользователя не существует'));
+        throw next(new AuthError('Не правильная почта или пароль'));
       }
 
       return bcrypt.compare(

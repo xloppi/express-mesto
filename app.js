@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { errors, celebrate, Joi } = require('celebrate');
 const { isURL, isEmail } = require('validator');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const routes = require('./routes/index');
 const {
   createUser,
@@ -23,6 +24,7 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
 });
 
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -76,10 +78,3 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT);
-
-/* (value, helpers) => {
-      if (isURL(value)) {
-        return value;
-      }
-      return helpers.error('any.invalid');
-    } */

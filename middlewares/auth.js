@@ -3,17 +3,16 @@ const jwt = require('jsonwebtoken');
 const JWT_KEY = 'superpupernikogdanepodbereshkey';
 
 module.exports = (req, res, next) => {
-  const { authorization } = req.headers;
+  const cookie = req.cookies.jwt;
 
-  if (!authorization || !authorization.startsWith('Bearer ')) {
+  if (!cookie) {
     return res.status(401).send({ message: 'Необходима авторизация' });
   }
 
-  const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
-    payload = jwt.verify(token, JWT_KEY);
+    payload = jwt.verify(cookie, JWT_KEY);
   } catch (err) {
     return res.status(401).send({ message: 'Необходима авторизация' });
   }
