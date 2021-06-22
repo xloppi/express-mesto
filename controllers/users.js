@@ -53,7 +53,11 @@ const createUser = (req, res, next) => {
           email,
           password: hash,
         })
-          .then((user) => res.status(200).send(user));
+          .then((user) => {
+            const newUser = user.toObject();
+            delete newUser.password;
+            res.status(201).send(newUser);
+          });
       })
       .catch((err) => {
         if (err.name === 'ValidationError' || err.name === 'CastError') {
